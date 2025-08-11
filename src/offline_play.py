@@ -9,7 +9,8 @@ from agent import HumanAgent
 # initialize the agents
 agents = {
     0: HumanAgent(),
-    1: ta.agents.OpenRouterAgent(model_name="google/gemini-2.0-flash-lite-001"),
+    1: HumanAgent(),
+    # 1: ta.agents.OpenRouterAgent(model_name="google/gemini-2.0-flash-lite-001"),
 }
 
 # initialize the environment

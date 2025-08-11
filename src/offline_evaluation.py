@@ -6,26 +6,24 @@ We evaluate Qwen/Qwen3-1.7B against a fixed opponent
 """
 import os
 from collections import defaultdict
-
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-
 import textarena as ta
+from stars_agent_track2_baseline import StarsAgentTrack2BaseLine
+
 
 NUM_EPISODES = 8
-EVAL_ENV_IDS = [("ThreePlayerIPD-v0", 3), ("ColonelBlotto-v0", 2)]  # (env-id, num_players)
-OPPONENT_NAME = "google/gemini-2.0-flash-001"
+EVAL_ENV_IDS = [("Codenames-v0", 4), ("ThreePlayerIPD-v0", 3), ("ColonelBlotto-v0", 2)]  # (env-id, num_players)
+# EVAL_ENV_IDS = [("ThreePlayerIPD-v0", 3), ("ColonelBlotto-v0", 2)]  # (env-id, num_players)
 FILE_NAME = "eval_summary.csv"
 
 # Model to evaluate
-model = ta.agents.HFLocalAgent(
-    model_name="Qwen/Qwen3-4B",
-    max_new_tokens=512,
-)
+model = StarsAgentTrack2BaseLine(system_prompt="You are a competitive game player. Make sure you read the game instructions carefully, and always follow the required format. "
+                                                  "But You always like to take high risks. Your action will be audacious.")
 
 # Fixed opponent
-opponent = ta.agents.OpenRouterAgent(model_name=OPPONENT_NAME)
+opponent = StarsAgentTrack2BaseLine()
 
 
 def run_game(env_id: str, num_players: int, model, opponent) -> dict:
@@ -50,68 +48,69 @@ def run_game(env_id: str, num_players: int, model, opponent) -> dict:
         "turn_count":  game_info[model_pid]["turn_count"],
     }
 
+if __name__ == "__main__":
 
-results = defaultdict(list)
+    results = defaultdict(list)
 
-outer_bar = tqdm(EVAL_ENV_IDS, desc="Environments")
-for env_id, num_players in outer_bar:
+    outer_bar = tqdm(EVAL_ENV_IDS, desc="Environments")
+    for env_id, num_players in outer_bar:
 
-    # per-environment aggregates
-    stats = dict(
-        wins=0,
-        losses=0,
-        draws=0,
-        total_reward_model=0.0,
-        total_reward_opponent=0.0,
-        total_invalid_moves=0,
-        total_turns=0,
-    )
+        # per-environment aggregates
+        stats = dict(
+            wins=0,
+            losses=0,
+            draws=0,
+            total_reward_model=0.0,
+            total_reward_opponent=0.0,
+            total_invalid_moves=0,
+            total_turns=0,
+        )
 
-    inner_bar = tqdm(range(NUM_EPISODES), desc=f"Evaluating {env_id}", leave=False)
-    for _ in inner_bar:
-        outcome = run_game(env_id, num_players, model, opponent)
+        inner_bar = tqdm(range(NUM_EPISODES), desc=f"Evaluating {env_id}", leave=False)
+        for _ in inner_bar:
+            outcome = run_game(env_id, num_players, model, opponent)
 
-        # W/L/D
-        if outcome["model_reward"] > outcome["opponent_reward"]:
-            stats["wins"] += 1
-        elif outcome["model_reward"] < outcome["opponent_reward"]:
-            stats["losses"] += 1
-        else:
-            stats["draws"] += 1
+            # W/L/D
+            if outcome["model_reward"] > outcome["opponent_reward"]:
+                stats["wins"] += 1
+            elif outcome["model_reward"] < outcome["opponent_reward"]:
+                stats["losses"] += 1
+            else:
+                stats["draws"] += 1
 
-        # Accumulate metrics
-        stats["total_reward_model"]     += outcome["model_reward"]
-        stats["total_reward_opponent"]  += outcome["opponent_reward"]
-        stats["total_invalid_moves"]    += int(outcome["invalid_move"])
-        stats["total_turns"]            += outcome["turn_count"]
+            # Accumulate metrics
+            stats["total_reward_model"]     += outcome["model_reward"]
+            stats["total_reward_opponent"]  += outcome["opponent_reward"]
+            stats["total_invalid_moves"]    += int(outcome["invalid_move"])
+            stats["total_turns"]            += outcome["turn_count"]
 
-        # Live progress bar
-        games_done = _ + 1
-        inner_bar.set_postfix({
-            "Win%":   f"{stats['wins']   / games_done:.1%}",
-            "Loss%":  f"{stats['losses'] / games_done:.1%}",
-            "Draw%":  f"{stats['draws']  / games_done:.1%}",
-            "Inv%":   f"{stats['total_invalid_moves'] / games_done:.1%}",
-            "Turns":  f"{stats['total_turns'] / games_done:.1f}",
-        })
+            # Live progress bar
+            games_done = _ + 1
+            inner_bar.set_postfix({
+                "Win%":   f"{stats['wins']   / games_done:.1%}",
+                "Loss%":  f"{stats['losses'] / games_done:.1%}",
+                "Draw%":  f"{stats['draws']  / games_done:.1%}",
+                "Inv%":   f"{stats['total_invalid_moves'] / games_done:.1%}",
+                "Turns":  f"{stats['total_turns'] / games_done:.1f}",
+            })
 
-    # write per-environment summary
-    results["env_id"].append(env_id)
-    results["win_rate"].append(stats["wins"] / NUM_EPISODES)
-    results["loss_rate"].append(stats["losses"] / NUM_EPISODES)
-    results["draw_rate"].append(stats["draws"] / NUM_EPISODES)
-    results["invalid_rate"].append(stats["total_invalid_moves"] / NUM_EPISODES)
-    results["avg_turns"].append(stats["total_turns"] / NUM_EPISODES)
-    results["avg_model_reward"].append(stats["total_reward_model"] / NUM_EPISODES)
-    results["avg_opponent_reward"].append(stats["total_reward_opponent"] / NUM_EPISODES)
+        # write per-environment summary
+        results["env_id"].append(env_id)
+        results["win_rate"].append(stats["wins"] / NUM_EPISODES)
+        results["loss_rate"].append(stats["losses"] / NUM_EPISODES)
+        results["draw_rate"].append(stats["draws"] / NUM_EPISODES)
+        results["invalid_rate"].append(stats["total_invalid_moves"] / NUM_EPISODES)
+        results["avg_turns"].append(stats["total_turns"] / NUM_EPISODES)
+        results["avg_model_reward"].append(stats["total_reward_model"] / NUM_EPISODES)
+        results["avg_opponent_reward"].append(stats["total_reward_opponent"] / NUM_EPISODES)
 
-df = pd.DataFrame(results)
+    df = pd.DataFrame(results)
 
-# Pretty-print to console (Markdown table looks nice in most terminals/Jupyter)
-print("\n=== Evaluation Summary ===")
-print(df.to_markdown(index=False, floatfmt=".3f"))
+    # Pretty-print to console (Markdown table looks nice in most terminals/Jupyter)
+    print("\n=== Evaluation Summary ===")
+    print(df.to_markdown(index=False, floatfmt=".3f"))
 
-# Persist to CSV
-os.makedirs("eval_results", exist_ok=True)
-df.to_csv(f"eval_results/{FILE_NAME}", index=False)
-print(f"\nSaved -> eval_results/{FILE_NAME}")
+    # Persist to CSV
+    os.makedirs("eval_results", exist_ok=True)
+    df.to_csv(f"eval_results/{FILE_NAME}", index=False)
+    print(f"\nSaved -> eval_results/{FILE_NAME}")
