@@ -13,7 +13,7 @@ MODEL_NAME = "STARS Agent Track2 qwen3 V0" # Replace with your model name
 # It should be unique and descriptive.
 # For different versions of your agent, you should use different names.
 MODEL_DESCRIPTION = "STARS Agent Track2 qwen3 V0"
-team_hash = "MG25-6DA61B5C91" # Replace with your team hash
+team_hash = "" # Replace with your team hash
 
 # Initialize your agent
 agent = StarsAgentTrack2BaseLine()
