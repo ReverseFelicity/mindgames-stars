@@ -3,24 +3,32 @@ Track 2: Generalization Track
 This script connects your agent to the online competition for the generalization track.
 Environments: Codenames-v0, ColonelBlotto-v0, ThreePlayerIPD-v0
 """
-
+import os
 import textarena as ta
 from agent import LLMAgent
-from stars_agent_track2_baseline import StarsAgentTrack2BaseLine
+from dotenv import load_dotenv
 
-MODEL_NAME = "STARS Agent Track2 qwen3 V0" # Replace with your model name
+# from stars_agent_track2_baseline import StarsAgentTrack2BaseLine
+from stars_agent_track2 import StarsAgentTrack2
+
+load_dotenv()
+
+
+
+MODEL_NAME = "STARS Agent Track2 qwen3 V1" # Replace with your model name
 # The name is used to identify your agent in the online arena and leaderboard.
 # It should be unique and descriptive.
 # For different versions of your agent, you should use different names.
-MODEL_DESCRIPTION = "STARS Agent Track2 qwen3 V0"
-team_hash = "" # Replace with your team hash
+MODEL_DESCRIPTION = "STARS Agent Track2 qwen3 V1"
+team_hash = os.getenv("TEAM_HASH")  # Replace with your team hash
 
 # Initialize your agent
-agent = StarsAgentTrack2BaseLine()
+agent = StarsAgentTrack2()
 
 
 if __name__ == '__main__':
-    for i in range(5):
+    # print(team_hash)
+    for i in range(10):
         # This play 1 game, you could add for loop to play multiple games
         env = ta.make_mgc_online(
             track="Generalization",

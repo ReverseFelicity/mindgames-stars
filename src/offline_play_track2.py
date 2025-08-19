@@ -10,13 +10,14 @@ from stars_agent_track2_baseline import StarsAgentTrack2BaseLine
 # initialize the agents
 agents = {
     0: HumanAgent(),
-    1: StarsAgentTrack2BaseLine(),
+    1: HumanAgent(),
+    2: HumanAgent(),
 }
 
 # initialize the environment
-env = ta.make(env_id="ColonelBlotto-v0")
+# env = ta.make(env_id="ColonelBlotto-v0")
 # env = ta.make(env_id="Codenames-v0")
-# env = ta.make(env_id="ThreePlayerIPD-v0")
+env = ta.make(env_id="ThreePlayerIPD-v0")
 env.reset(num_players=len(agents))
 
 

@@ -3,10 +3,10 @@ name = "mindgames-starter-kit"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = [
     "langchain>=0.3.27",
-    "litellm>=1.75.0",
+    "litellm==1.74.3",
     "outlines>=1.2.1",
     "textarena>=0.7.3",
     "transformers>=4.55.0",
@@ -16,6 +16,11 @@ dependencies = [
     "bitsandbytes>=0.46.1",
     "pandas>=2.3.1",
     "tabulate>=0.9.0",
+    "dotenv>=0.9.9",
+    "crewai==0.150.0",
+    "langchain-community>=0.3.27",
+    "langchain-openai>=0.3.29",
+    "langchain-ollama>=0.3.6",
 ]
 
 [tool.uv.sources]

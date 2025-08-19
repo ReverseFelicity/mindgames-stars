@@ -1,0 +1,68 @@
+Current observations: 
+[GAME] You are Commander Alpha in a game of ColonelBlotto. Each round, you have to allocate exactly 20 units across fields: A, B, C
+Format: '[A4 B2 C2]'
+Win the majority of fields to win the round!
+[GAME] === COLONEL BLOTTO - Round 1/9 ===
+Rounds Won - Commander Alpha: 0, Commander Beta: 0
+Available fields: A, B, C
+Units to allocate: 20
+Format: '[A4 B2 C2]'.
+Please enter the action: 
+
+
+
+
+Current observations: 
+[GAME] You are playing Codenames, a 2v2 word deduction game. Each team (Red and Blue) has a Spymaster and an Operative.
+Rules:
+1. The Spymaster gives a one-word clue + number (e.g., '[wind 2]') based on the team's secret words (the clue may not contain any of the words on the board).
+2. The Operative guesses up to N+1 words (e.g., '[breeze]') based on the clue. They can also '[pass]'.
+3. Avoid guessing opponent words, neutral words (N), or the Assassin (A), which causes instant loss.
+4. First team to guess all their words wins.
+
+You are Player 0, the Spymaster for Red team. Give a one-word clue and number.
+[GAME] Codenames Words:
+voice    R 
+field    R 
+friend   N 
+view     A 
+smash    R 
+bit      R 
+square   N 
+list     B 
+step     B 
+hour     R 
+cut      B 
+harmony  R 
+fowl     B 
+ball     B 
+hate     R 
+bed      N 
+bread    N 
+rat      B 
+trick    R 
+brake    N 
+pocket   B 
+animal   N 
+roof     R 
+tongue   N 
+cotton   B 
+
+Please enter the action: 
+
+
+
+Current observations: 
+[GAME] You are Player 0 in a 3-player Iterated Prisoner's Dilemma. The match lasts 5 rounds.
+Round structure:
+• 1 free-chat turns
+• 1 decision turn - submit one token per opponent: '[<opp-id> cooperate]' or '[<opp-id> defect]' (i.e. '[1 defect] [2 cooperate]'; the default is 'cooperate'). 
+Pair-wise payoff matrix (applied to each unordered pair):
+  - Both cooperate  ->  3
+  - Both defect     ->  1
+  - You defect, they cooperate -> 5
+  - You cooperate, they defect -> 0
+The player(s) with the highest score at the end of all rounds wins.
+
+[GAME] ─── Starting Round 1 ───	You can converse freely for the next 1 rounds.
+Please enter the action: 

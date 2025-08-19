@@ -28,7 +28,7 @@ class StarsAgent(Agent):
         else:
             return "", origin_text.strip()
 
-    @time_monitor(log_file="generation_logs.txt")
+    @time_monitor("generate.txt")
     def generate(self, prompt: str, system: str=None, options: dict=None, output_format=None):
         if not options: options = self.model_option
 
@@ -49,3 +49,4 @@ class StarsAgent(Agent):
 if __name__ == "__main__":
 
     agent = StarsAgent("qwen3:8b")
+

@@ -11,6 +11,7 @@ import pandas as pd
 from tqdm import tqdm
 import textarena as ta
 from stars_agent_track2_baseline import StarsAgentTrack2BaseLine
+from stars_agent_track2 import StarsAgentTrack2
 
 
 NUM_EPISODES = 8
@@ -19,8 +20,7 @@ EVAL_ENV_IDS = [("Codenames-v0", 4), ("ThreePlayerIPD-v0", 3), ("ColonelBlotto-v
 FILE_NAME = "eval_summary.csv"
 
 # Model to evaluate
-model = StarsAgentTrack2BaseLine(system_prompt="You are a competitive game player. Make sure you read the game instructions carefully, and always follow the required format. "
-                                                  "But You always like to take high risks. Your action will be audacious.")
+model = StarsAgentTrack2()
 
 # Fixed opponent
 opponent = StarsAgentTrack2BaseLine()
