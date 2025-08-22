@@ -12,12 +12,13 @@ agents = {
     0: HumanAgent(),
     1: HumanAgent(),
     2: HumanAgent(),
+    3: HumanAgent()
 }
 
 # initialize the environment
 # env = ta.make(env_id="ColonelBlotto-v0")
-# env = ta.make(env_id="Codenames-v0")
-env = ta.make(env_id="ThreePlayerIPD-v0")
+# env = ta.make(env_id="ThreePlayerIPD-v0")
+env = ta.make(env_id="Codenames-v0")
 env.reset(num_players=len(agents))
 
 

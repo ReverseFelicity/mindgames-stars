@@ -28,6 +28,15 @@ class StarsAgent(Agent):
         else:
             return "", origin_text.strip()
 
+    def generate_with_format(self, prompt: str, output_format: dict, system: str=None, options: dict=None):
+        thinking, content = self.generate(prompt=prompt, system=system)
+        _, content = self.generate(prompt=f"rewrite this content: '{content}' into target format: {output_format}", system=system, output_format=output_format)
+        return content
+
+    def generate_rtn_content_only(self, prompt: str, system: str=None, options: dict=None, output_format=None):
+        _, content = self.generate(prompt, system, options, output_format)
+        return content
+
     @time_monitor("generate.txt")
     def generate(self, prompt: str, system: str=None, options: dict=None, output_format=None):
         if not options: options = self.model_option

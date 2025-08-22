@@ -36,12 +36,6 @@ class StarsAgentTrack2V2(StarsAgent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-
-    def generate_with_format(self, prompt: str, output_format: dict, system: str=None, options: dict=None):
-        thinking, content = self.generate(prompt=prompt, system=system)
-        _, content = self.generate(prompt=f"rewrite this content: '{content}' into target format", system=system, output_format=output_format)
-        return content
-
     @time_monitor(log_file="stars_agent_track2.txt")
     def __call__(self, observation: str) -> str:
 
