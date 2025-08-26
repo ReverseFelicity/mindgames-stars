@@ -35,7 +35,7 @@ def time_monitor(log_file="log.txt"):
             used_time = time.time() - start_time
             logger.info("function [%s] cost time %.2f seconds" % (func.__name__, used_time))
             print("function [%s] cost time %.2f seconds" % (func.__name__, used_time))
-            logger.info(f"input args {args} kwargs {kwargs} output {res}\n")
+            logger.info(f"input kwargs {kwargs}")
             logger.info(f"output {res}\n\n")
             return res
         return wrapper

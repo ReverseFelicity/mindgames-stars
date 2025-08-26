@@ -28,9 +28,10 @@ class StarsAgent(Agent):
         else:
             return "", origin_text.strip()
 
-    def generate_with_format(self, prompt: str, output_format: dict, system: str=None, options: dict=None):
-        thinking, content = self.generate(prompt=prompt, system=system)
-        _, content = self.generate(prompt=f"rewrite this content: '{content}' into target format: {output_format}", system=system, output_format=output_format)
+    def generate_with_format(self, prompt: str, output_format: dict, system: str=None, options: dict=None, print_log: bool = False):
+        thinking, content = self.generate(prompt=prompt, system=system, print_log=print_log)
+        _, content = self.generate(prompt=f"""This content contains a Json output: {content}. Extract the Json part and output in following format: {output_format}
+""", output_format=output_format, print_log=print_log)
         return content
 
     def generate_rtn_content_only(self, prompt: str, system: str=None, options: dict=None, output_format=None):
@@ -38,11 +39,15 @@ class StarsAgent(Agent):
         return content
 
     @time_monitor("generate.txt")
-    def generate(self, prompt: str, system: str=None, options: dict=None, output_format=None):
+    def generate(self, prompt: str, system: str=None, options: dict=None, output_format=None, print_log: bool = False):
         if not options: options = self.model_option
 
         response = generate(model=self.model_name, prompt=prompt, system=system, options=options, format=output_format)
         thinking, content = self._split_think_tags(response.response)
+        if print_log:
+            print(f"\033[31m{prompt}\033[0m")
+            print(f"\033[33m{thinking}\033[0m")
+            print(f"\033[34m{content}\033[0m")
         return thinking, content
 
     def chat(self, messages: List[Dict[str, str]]):
@@ -57,5 +62,9 @@ class StarsAgent(Agent):
 
 if __name__ == "__main__":
 
-    agent = StarsAgent("qwen3:8b")
+    agent = StarsAgent("cogito:8b")
+    thinking, content = agent.generate(prompt="how to cook eggs", system="Enable deep thinking subroutine.")
+    print(thinking)
+    print("=======")
+    print(content)
 
