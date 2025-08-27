@@ -34,8 +34,8 @@ class StarsAgent(Agent):
 """, output_format=output_format, print_log=print_log)
         return content
 
-    def generate_rtn_content_only(self, prompt: str, system: str=None, options: dict=None, output_format=None):
-        _, content = self.generate(prompt, system, options, output_format)
+    def generate_rtn_content_only(self, prompt: str, system: str=None, options: dict=None, output_format=None, print_log=False):
+        _, content = self.generate(prompt, system, options, output_format, print_log=print_log)
         return content
 
     @time_monitor("generate.txt")
