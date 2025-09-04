@@ -2,7 +2,7 @@ import re
 import ollama
 from ollama import chat, generate, ChatResponse, GenerateResponse
 from typing import List, Dict
-from utils import time_monitor
+from utils import time_monitor, my_logger
 from agent import Agent
 
 
@@ -18,6 +18,31 @@ class StarsAgent(Agent):
         self.system_prompt = system_prompt
         self.model_option = model_option if not model_option else {"temperature": 0.2, "num_predict": 2048}
         self.memory = []
+
+    def _observation_wrapper(self, observation: str) -> str:
+        observation_ = observation.replace(
+            "Win the majority of fields to win the round!",
+            "Win the majority of fields to win the round (win 2 fields out of 3)!"
+        )
+        observation_ = observation_.replace(
+            "Format: '[A4 B2 C2]'",
+            "Format: '[A6 B7 C7]'"
+        )
+        observation_ = observation_.replace(
+            "1 free-chat turns",
+            "1 free-chat turns (chat will be shared with other players, do not express your inner thought)"
+        )
+        observation_ = observation_.replace(
+            "(the clue may not contain any of the words on the board).",
+            ". The clue may not contain any of the words on the board (the Codenames Words list)."
+        )
+        observation_ = observation_.replace(
+            "The Operative guesses up to N+1 words (e.g., '[breeze]') based on the clue. They can also '[pass]'.",
+            "The Operative guesses up to N+1 words (e.g., '[breeze]') based on the clue. "
+            "But Operative should guess 1 word at one time, and there will be N+1 rounds for Operative to guess. They can also '[pass]' to finish guessing."
+        )
+        return observation_
+
 
     def _split_think_tags(self, origin_text: str):
         match = re.search(self.think_tags, origin_text, flags=re.DOTALL)
@@ -38,7 +63,7 @@ class StarsAgent(Agent):
         _, content = self.generate(prompt, system, options, output_format, print_log=print_log)
         return content
 
-    @time_monitor("generate.txt")
+    @my_logger("generate.txt")
     def generate(self, prompt: str, system: str=None, options: dict=None, output_format=None, print_log: bool = False):
         if not options: options = self.model_option
 
