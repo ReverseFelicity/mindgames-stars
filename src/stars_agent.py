@@ -1,9 +1,12 @@
 import re
 import ollama
+import json
 from ollama import chat, generate, ChatResponse, GenerateResponse
 from typing import List, Dict
 from utils import time_monitor, my_logger
 from agent import Agent
+from datetime import datetime
+from models import *
 
 
 class StarsAgent(Agent):
@@ -18,6 +21,12 @@ class StarsAgent(Agent):
         self.system_prompt = system_prompt
         self.model_option = model_option if not model_option else {"temperature": 0.2, "num_predict": 2048}
         self.memory = []
+
+    def _log_to_txt(self, content: str, file_name: str="agent.txt", mode: str='a'):
+        with open(f"logs/{file_name}.txt", mode, encoding="utf-8") as f:
+            f.writelines([
+                "\n ========== %s  ==========" % datetime.now().strftime("%Y-%m-%d %H:%M:%S"), content
+            ])
 
     def _observation_wrapper(self, observation: str) -> str:
         observation_ = observation.replace(
@@ -55,9 +64,20 @@ class StarsAgent(Agent):
 
     def generate_with_format(self, prompt: str, output_format: dict, system: str=None, options: dict=None, print_log: bool = False):
         thinking, content = self.generate(prompt=prompt, system=system, print_log=print_log)
-        _, content = self.generate(prompt=f"""This content contains a Json output: {content}. Extract the Json part and output in following format: {output_format}
-""", output_format=output_format, print_log=print_log)
+        _, content = self.generate(
+            prompt=f"""This content contains a Json output: {content}. Extract the Json part and output in following format: {output_format}""", output_format=output_format, print_log=print_log)
         return content
+
+    def generate_with_format2(self, prompt: str, format_name: str, system: str=None, options: dict=None, print_log: bool = False ):
+        cl = globals().get(format_name)
+        thinking, content = self.generate(prompt=prompt, system=system, print_log=print_log)
+        _, content = self.generate(
+            prompt=f"""From this content: {content}. According to this following format: {cl.model_json_schema()}, extract content and output in json""", output_format=cl.model_json_schema(), print_log=print_log)
+        if print_log:
+            print(f"\033[31m{prompt}\033[0m")
+            print(f"\033[33m{thinking}\033[0m")
+            print(f"\033[34m{content}\033[0m")
+        return cl(**json.loads(content))
 
     def generate_rtn_content_only(self, prompt: str, system: str=None, options: dict=None, output_format=None, print_log=False):
         _, content = self.generate(prompt, system, options, output_format, print_log=print_log)
