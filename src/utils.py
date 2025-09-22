@@ -59,7 +59,7 @@ def time_monitor():
 def timeout(seconds=60):
     def decorator(func):
         def wrapper(*args, **kwargs):
-            with ProcessPoolExecutor(max_workers=1) as executor:
+            with ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(func, *args, **kwargs)
                 try:
                     result = future.result(timeout=seconds)

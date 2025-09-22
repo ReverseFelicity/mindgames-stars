@@ -1,17 +1,13 @@
 import json
-import time
-import numpy as np
-from pydantic import BaseModel
-from typing import List, Dict, Literal
-from crewai import Agent, LLM, Crew, Task, Process
-import statistics
+
+from copy import deepcopy
 from stars_agent import StarsAgent
-from utils import timeout, my_logger, time_monitor, extract_python_blocks, run_python_blocks
+from utils import timeout, time_monitor, extract_python_blocks, run_python_blocks
 from models import *
 
 
 
-class StarsAgentTrack2V5(StarsAgent):
+class StarsAgentTrack2V6(StarsAgent):
 
     _base_prompt = """
 You are a competitive game player, You are playing a game based on text, and the text contains all game observation with rules, instructions, current round
@@ -45,9 +41,23 @@ now start:
 [Answer] ANSWER_PLACEHOLDER
 """
 
+    _wrong_format_rewrite_prompt = """
+You are a competitive game player, You are playing a game based on text, and the text contains all game observation with rules, instructions, current round
+and history rounds (if the game has begun). This text is called "observation".
+Right now, you are generating this content:
+
+=============================
+CONTENT_PLACEHOLDER
+=============================
+
+it does not meet the format, so please rewrite it into two parts, (1) Thinking (2) Answer. Figure out which part is thinking, and which part is as answer
+
+"""
+
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._log_to_txt("Hello", mode="w", file_name="StarsAgentTrack2V5")
+        self._log_to_txt("Hello", mode="w", file_name="StarsAgentTrack2V6")
         self._log_to_txt("Hello", mode="w", file_name="generate")
 
     def generate_chat(self, observation: str):
@@ -61,51 +71,51 @@ now start:
                      format_name="ReActWithRound",
                      answer_key_in_format="current_action_type")
         ]
-        action_type = "structured command"
+
         for question in question_list:
             chat_prompt += self._question_prompt.replace("QUESTION_PLACEHOLDER", str(question.question))
-            chat_prompt, blocks, react = self.answer_question(question, chat_prompt)
-            if question.format_name == "ReActWithRound":
-                action_type = react.answer.current_action_type
-        return chat_prompt, action_type
+            chat_prompt, blocks = self.answer_question(question, chat_prompt)
 
-    def answer_question(self, q: Question, chat_prompt: str):
-        react = None
-        if q.format_name:
-            react = self.generate_with_format2(
-                prompt=chat_prompt, system="/nothink",
-                options={
-                    "temperature": 0.1, "stop": ["[Question]", "Please enter the action"], "repeat_penalty": 1.2
-                },
-                format_name=q.format_name
-            )
-            answer = react.answer if isinstance(react.answer, str) else getattr(react.answer, q.answer_key_in_format)
-            chat_prompt += self._react_prompt.replace("THINKING_PLACEHOLDER", react.thinking).replace(
-                "ANSWER_PLACEHOLDER", answer).strip()
-            blocks = extract_python_blocks(answer)
-        else:
-            content_meets_format = False
-            chat_prompt_tmp = chat_prompt
-            options = {
+        return chat_prompt, chat_prompt.split("[Answer]")[-1].strip()
+
+
+    def answer_question_with_format(self, q: Question, chat_prompt:str):
+        chat_prompt_ = deepcopy(chat_prompt)
+
+        react = self.generate_with_format2(
+            prompt=chat_prompt_, system="/nothink",
+            options={
+                "temperature": 0.1, "stop": ["[Question]", "Please enter the action"], "repeat_penalty": 1.2
+            },
+            format_name=q.format_name
+        )
+        answer = react.answer if isinstance(react.answer, str) else getattr(react.answer, q.answer_key_in_format)
+        chat_prompt_ += self._react_prompt.replace("THINKING_PLACEHOLDER", react.thinking).replace(
+            "ANSWER_PLACEHOLDER", answer).strip()
+        blocks = extract_python_blocks(answer)
+        return chat_prompt_, blocks
+
+    def answer_question_without_format(self, q: Question, chat_prompt:str):
+        chat_prompt_ = deepcopy(chat_prompt)
+        content = self.generate_rtn_content_only(
+            prompt=chat_prompt, system="/nothink",
+            options={
                 "temperature": 0.1, "stop": ["[Question]"], "repeat_penalty": 1.2
             }
-            while not content_meets_format:
-                content = self.generate_rtn_content_only(
-                    prompt=chat_prompt, system="/nothink",
-                    options=options
-                )
-                if not "[Thinking]" in content or not "[Answer]" in content:
-                    chat_prompt_tmp = chat_prompt_tmp.replace("now start:", "For each question, think first then answer, with a fixed format [Thinking] + [Answer]!!\nnow start:")
-                    options["temperature"] += 0.1
-                    print("Bad format")
-                    print(f"options {options} =====>>>")
-                    print(f"origin prompt {chat_prompt} =====>>>")
-                    print(f"content {content} =====>>>")
-                else:
-                    content_meets_format = True
-            chat_prompt += content.strip()
+        )
+        if not "[Thinking]" in content or not "[Answer]" in content:
+            chat_prompt_, blocks = self.answer_question_with_format(Question(question="", format_name="ReAct"),
+                                             chat_prompt=self._wrong_format_rewrite_prompt.replace("CONTENT_PLACEHOLDER", content))
+        else:
+            chat_prompt_ += content.strip()
             blocks = extract_python_blocks(content)
-        return chat_prompt, blocks, react
+        return chat_prompt_, blocks
+
+    def answer_question(self, q: Question, chat_prompt: str):
+        if q.format_name:
+            return self.answer_question_with_format(q, chat_prompt)
+        else:
+            return self.answer_question_without_format(q, chat_prompt)
 
 
     def analysis_code(self, code, out, err, fail_times):
@@ -129,7 +139,7 @@ now start:
         fail_times = 0
         for question in question_list:
             chat_prompt += self._question_prompt.replace("QUESTION_PLACEHOLDER", str(question.question))
-            tmp_chat_prompt, blocks, _ = self.answer_question(question, chat_prompt)
+            chat_prompt, blocks = self.answer_question(question, chat_prompt)
             if len(blocks) > 0:
                 code, out, err = run_python_blocks(blocks)
                 finished, content = self.analysis_code(code, out, err, fail_times)
@@ -146,7 +156,7 @@ now start:
                     question_list.append(
                         Question(question=f"This is the execution result of your code, it meets error: \n'{err}'\n Now think it twice, and update your code")
                     )
-        self._log_to_txt(chat_prompt, "StarsAgentTrack2V5")
+        self._log_to_txt(chat_prompt, "StarsAgentTrack2V6")
         return chat_prompt.split("[Answer]")[-1].strip()
 
     def valid_action(self, observation: str, action: str) -> str:
@@ -164,8 +174,8 @@ now start:
 
         for question in question_list:
             chat_prompt += self._question_prompt.replace("QUESTION_PLACEHOLDER", str(question.question))
-            chat_prompt, blocks, _ = self.answer_question(question, chat_prompt)
-        self._log_to_txt(chat_prompt, "StarsAgentTrack2V5")
+            chat_prompt, blocks  = self.answer_question(question, chat_prompt)
+        self._log_to_txt(chat_prompt, "StarsAgentTrack2V6")
         return chat_prompt.split("[Answer]")[-1].strip()
 
     def output_wrapper(self, action: str):
@@ -184,13 +194,13 @@ now start:
             action = "Timeout, fail to generate an action"
         for i in range(1):
             action = self.valid_action(observation_, action)
-        # self._log_to_txt("\n" + "*" * 200, "StarsAgentTrack2V5")
+        self._log_to_txt("\n" + "*" * 200, "StarsAgentTrack2V6")
         return self.output_wrapper(action)
-        # return action
+
 
 if __name__ == "__main__":
 
-    agent = StarsAgentTrack2V5("qwen3:8b")
+    agent = StarsAgentTrack2V6("qwen3:8b")
 
     with open("samples.json", "r", encoding="utf-8") as f:
         samples = json.load(f)
@@ -202,3 +212,5 @@ if __name__ == "__main__":
                 result = agent(sample)
                 print(result)
                 print("=" * 300)
+                break
+            break

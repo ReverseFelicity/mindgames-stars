@@ -21,6 +21,8 @@ dependencies = [
     "langchain-community>=0.3.27",
     "langchain-openai>=0.3.29",
     "langchain-ollama>=0.3.6",
+    "scikit-learn>=1.7.1",
+    "nltk>=3.9.1",
 ]
 
 [tool.uv.sources]

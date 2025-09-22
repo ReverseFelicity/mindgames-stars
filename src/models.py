@@ -13,6 +13,5 @@ class Question(BaseModel):
 class Round(BaseModel):
     current_action_type: Literal["free-chat", "structured command"]
 
-class ReActWithRound(BaseModel):
-    thinking: str
+class ReActWithRound(ReAct):
     answer: Round
