@@ -3,7 +3,7 @@ import ollama
 import json
 from ollama import chat, generate, ChatResponse, GenerateResponse
 from typing import List, Dict
-from utils import time_monitor, my_logger
+from utils import time_monitor, my_logger, timeout
 from agent import Agent
 from datetime import datetime
 from models import *
@@ -43,7 +43,7 @@ class StarsAgent(Agent):
         )
         observation_ = observation_.replace(
             "(the clue may not contain any of the words on the board).",
-            ". The clue may not contain any of the words on the board (the Codenames Words list)."
+            ". The clue may not contain any of the words on the board (the Codenames Words list) or you will lose the game instantly!"
         )
         observation_ = observation_.replace(
             "The Operative guesses up to N+1 words (e.g., '[breeze]') based on the clue. They can also '[pass]'.",
@@ -83,6 +83,7 @@ class StarsAgent(Agent):
         _, content = self.generate(prompt, system, options, output_format, print_log=print_log)
         return content
 
+    @timeout(seconds=30)
     @my_logger("generate.txt")
     def generate(self, prompt: str, system: str=None, options: dict=None, output_format=None, print_log: bool = False):
         if not options: options = self.model_option

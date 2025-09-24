@@ -15,3 +15,9 @@ class Round(BaseModel):
 
 class ReActWithRound(ReAct):
     answer: Round
+
+class ReActWithValidation(BaseModel):
+    reasoning: str
+    sample_action: str
+    action: str
+    pass_validation: bool

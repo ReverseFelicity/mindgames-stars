@@ -76,9 +76,10 @@ PY_BLOCK_RE = re.compile(f'```python(.*?)```', re.DOTALL)
 def extract_python_blocks(text: str):
     return [m.group(1).strip() for m in PY_BLOCK_RE.finditer(text)]
 
+@time_monitor()
 def run_python_blocks(blocks, timeout_s=20):
     full_source = '\n\n'.join(blocks)
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as f:
         f.write(full_source)
         f.flush()
         try:
