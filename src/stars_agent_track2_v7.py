@@ -103,7 +103,7 @@ REWRITE_PROMPT
             prompt=prompt, system="/nothink",
             options={
                 "temperature": self._temperature or 0.1,
-                "num_predict": 4096,
+                "num_predict": 8192,
                 "stop": ["[Question]", "Please enter the action"],
                 "repeat_penalty": 2
             } if len(options)==0 else options,
@@ -123,7 +123,7 @@ REWRITE_PROMPT
             prompt=prompt, system="/nothink",
             options={
                 "temperature": self._temperature or 0.1,
-                "num_predict": 4096,
+                "num_predict": 8192,
                 "stop": ["[Question]", "Please enter the action"],
                 "repeat_penalty": 2
             } if len(options)==0 else options
@@ -366,14 +366,10 @@ if __name__ == "__main__":
     for game_name in samples:
         # if game_name == "3-player Iterated Prisoner's Dilemma":
         # if game_name == "Codenames":
-        # if game_name == "ColonelBlotto":
+        if game_name == "ColonelBlotto":
             for sample in samples[game_name]:
                 result = agent(sample)
                 print(result)
                 print("*" * 300)
-            #     break
-            # break
-    # for i in [3, 4]:
-    #     sample = samples["3-player Iterated Prisoner's Dilemma"][i]
-    #     result = agent(sample)
-    #     print(result)
+                break
+            break
