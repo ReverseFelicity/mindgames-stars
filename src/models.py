@@ -18,6 +18,5 @@ class ReActWithRound(ReAct):
 
 class ReActWithValidation(BaseModel):
     reasoning: str
-    sample_action: str
     action: str
-    pass_validation: bool
+    is_action_valid: bool

@@ -11,7 +11,7 @@ from typing import List
 
 
 
-class StarsAgentTrack2V7(StarsAgent):
+class StarsAgentTrack2V9(StarsAgent):
     _temperature: float = 0.1
     _validation_prompt = """
 Your team are competitive game players, You are playing a game based on text, and the text contains all game observation with rules, instructions, current round
@@ -82,7 +82,7 @@ REWRITE_PROMPT
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._log_to_txt("Hello", mode="w", file_name="StarsAgentTrack2V7")
+        self._log_to_txt("Hello", mode="w", file_name="StarsAgentTrack2V9")
         self._log_to_txt("Hello", mode="w", file_name="generate")
 
     def _fetch_code_blocks(self, content: str):
@@ -149,7 +149,7 @@ REWRITE_PROMPT
         if code_blocks:
             code, out, err = self._run_code_blocks(code_blocks, code_exe_times)
             if code == 0:
-                self._log_to_txt(f"\n************ Origin Code Start ************\n{code_blocks}\n************ Origin Code End ************\n", "StarsAgentTrack2V7")
+                self._log_to_txt(f"\n************ Origin Code Start ************\n{code_blocks}\n************ Origin Code End ************\n", "StarsAgentTrack2V9")
                 thinking_answer = replace_code(thinking_answer)
                 observation = out
             else:
@@ -194,30 +194,15 @@ REWRITE_PROMPT
         if llm_options is None:
             llm_options = {}
         base_prompt = deepcopy(chat_prompt)
-        round_phase = chat_prompt.split("[Answer]")[-1].strip()
-        if round_phase == "free-chat":
-            question_list = additional_questions + [
-                Question(
-                    question="Although it's free-chat phase, you can also use Python to help your decisions, for current around, how would you like to use Python to help your decisions, also how would you use Python to valid your choice? Provide a good idea, but no code needed."
-                             "You dont need to use Python to get final action directly, you can use Python script to list any information or do experiment, and decide by yourself later."),
-                Question(
-                    question="According to your idea in last question, now implement it, write a Python script (format: ```python(.*?)```) to help your decision, but avoid printing too many logs, only print key logs, also avoid Emoji, avoid too many comments!"),
-                Question(
-                    question="Now according to the above code execution result in [Observation], considering game instructions, action format, history rounds and our whole chat history, think twice, put thinking in [Thinking] and provide your words in [Answer]. Your words will be shared with all opponents,  and you know whether to talk frankly, or misleading opponents to realize the simulated effects from your Python code. Mind your language!"),
-                Question(
-                    question="Since you have just decided the action, think once again to make sure your words do not expose your inner plan, or your inner strategy accidentally!! (It's free-chat phase !! not yet decision phase)"),
-            ]
-
-        else:
-            question_list = additional_questions + [
-                Question(
-                    question="You can use Python to help your decisions, for current around, how would you like to use Python to help your decisions, also how would you use Python to valid your choice? Provide a good idea, but no code needed."
-                             "You dont need to use Python to get final action directly, you can use Python script to list any information or do experiment, and decide by yourself later."),
-                Question(
-                    question="According to your idea in last question, now implement it, write a Python script (format: ```python(.*?)```) to help your decision, but avoid printing too many logs, only print key logs, also avoid UnicodeDecodeError"),
-                Question(
-                    question="Now according to the above code execution result in [Observation], considering game instructions, action format, history rounds and our whole chat history, think twice, put thinking in [Thinking] and provide only 1 final action in [Answer] (basically, if python code is executed successfully, trust code result)"),
-            ]
+        question_list = additional_questions + [
+            Question(
+                question="You can use Python to help your decisions, for current around, how would you like to use Python to help your decisions, also how would you use Python to valid your choice? Provide a good idea, but no code needed."
+                         "You dont need to use Python to get final action directly, you can use Python script to list any information or do experiment, and decide by yourself later."),
+            Question(
+                question="According to your idea in last question, now implement it, write a Python script (format: ```python(.*?)```) to help your decision, but avoid printing too many logs, only print key logs, also avoid UnicodeDecodeError"),
+            Question(
+                question="Now according to the above code execution result in [Observation], considering game instructions, action format, history rounds and our whole chat history, think twice, put thinking in [Thinking] and provide only 1 final action in [Answer] (basically, if python code is executed successfully, trust code result)"),
+        ]
 
 
         for q in question_list:
@@ -226,20 +211,21 @@ REWRITE_PROMPT
                 base_prompt = f"{prompt_with_q}\n{thinking_answer}"
             else:
                 base_prompt = f"{prompt_with_q}\n{thinking_answer}\n[Observation]{observation_}"
-        self._log_to_txt(base_prompt, "StarsAgentTrack2V7")
+        self._log_to_txt(base_prompt, "StarsAgentTrack2V9")
         return  base_prompt.split("[Answer]")[-1].strip()
 
-    def get_action_without_python(self, chat_prompt: str, additional_questions=None, llm_options=None):
-        if additional_questions is None:
-            additional_questions = []
+    def valid_action(self, chat_prompt: str, action: str, llm_options=None):
         if llm_options is None:
             llm_options = {}
         base_prompt = deepcopy(chat_prompt)
-        question_list = additional_questions + [
+        question_list = [
             Question(
-                question="Analysis step by step, and you can try the eas"),
+                question="For your current role, what are the red lines? What are the action requirement? And point out the most important one. For example, number constraints? or the words must not contain? or the words must contain.  Only one red line!"),
             Question(
-                question="According to your analysis above, considering game instructions, action format and our whole chat history, think twice and provide only 1 final action in [Answer]"),
+                question=f"You used tools and thank carefully and decided to use this action: \n\n{action}\n\n You can use Python to help validate this proposed action: {action} with the most important action requirement you have pointed in last question (Only one! the most important one!), provide a Python script (format: ```python(.*?)```) with detailed log printing, print enough logs, but avoid Emoji!"
+                         f"Repeat the proposed action in your thinking. Dont you dare assume other proposed action!!"),
+            Question(
+                question=f"Now according to the above code execution result in [Observation], think twice, if the action meets requirements, output action in [Answer] directly (which is '{action}')  or list reasons why it does not meet requirements."),
         ]
         for q in question_list:
             prompt_with_q, thinking_answer, observation_ = self._answer_question(base_prompt, q, 0, llm_options)
@@ -247,36 +233,7 @@ REWRITE_PROMPT
                 base_prompt = f"{prompt_with_q}\n{thinking_answer}"
             else:
                 base_prompt = f"{prompt_with_q}\n{thinking_answer}\n[Observation]{observation_}"
-        self._log_to_txt(base_prompt, "StarsAgentTrack2V7")
-        return  base_prompt.split("[Answer]")[-1].strip()
-
-    def valid_action(self, chat_prompt: str, action: str, llm_options=None):
-        if llm_options is None:
-            llm_options = {}
-        base_prompt = deepcopy(chat_prompt)
-        round_phase = chat_prompt.split("[Answer]")[-1].strip()
-        if round_phase == "free-chat":
-            question_list = [
-                Question(
-                    question=f"Although it's a free-chat phase, you still used tools and thank carefully and decided to use this action (free-chat text): \n\n{action}\n\nSo you only need to make sure your words do not expose your inner plan accidentally!! (It's free-chat phase !! not yet decision phase)"),
-            ]
-        else:
-            question_list = [
-                Question(
-                    question="For your current role, what are the red lines? What are the action requirement? And point out the most important one. For example, number constraints? or the words must not contain? or the words must contain.  Only one red line!"),
-                Question(
-                    question=f"You used tools and thank carefully and decided to use this action: \n\n{action}\n\n You can use Python to help validate this proposed action: {action} with the most important action requirement you have pointed in last question (Only one! the most important one!), provide a Python script (format: ```python(.*?)```) with detailed log printing, print enough logs, but avoid Emoji!"
-                             f"Repeat the proposed action in your thinking. Dont you dare assume other proposed action!!"),
-                Question(
-                    question=f"Now according to the above code execution result in [Observation], think twice, if the action meets requirements, output action in [Answer] directly (which is '{action}')  or list reasons why it does not meet requirements."),
-            ]
-        for q in question_list:
-            prompt_with_q, thinking_answer, observation_ = self._answer_question(base_prompt, q, 0, llm_options)
-            if observation_ is None:
-                base_prompt = f"{prompt_with_q}\n{thinking_answer}"
-            else:
-                base_prompt = f"{prompt_with_q}\n{thinking_answer}\n[Observation]{observation_}"
-        self._log_to_txt(f"\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n{base_prompt}", "StarsAgentTrack2V7")
+        self._log_to_txt(f"\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n{base_prompt}", "StarsAgentTrack2V9")
         return  base_prompt.split("[Answer]")[-1].strip()
 
     def get_validation_obj(self, observation: str, action: str, validation: str):
@@ -296,7 +253,6 @@ REWRITE_PROMPT
     def main_process(self, observation: str):
         meet_requirements = False
         chat_prompt = self.get_base_chat_prompt(observation)
-        round_phase = chat_prompt.split("[Answer]")[-1].strip()
 
         action = ""
         get_action_additions = []
@@ -319,9 +275,7 @@ REWRITE_PROMPT
                     meet_requirements = True
                 else:
                     get_action_additions.append(Question(question=f"You tried this action for this round '{action}', but it doesn't meet requirements because of '{validation_obj.reasoning}', Learn the lesson!! Dont make the same mistake!! Now answer me what lesson have you learnt"))
-        if round_phase != "free-chat":
-            action = self.output_wrapper(action)
-        return action
+        return self.output_wrapper(action)
 
 
     def get_action_and_validate(self, chat_prompt: str, additional_questions=None, llm_options=None):
@@ -352,14 +306,14 @@ REWRITE_PROMPT
         #     action2, time2 = self._get_one_action(observation, 0.2)
         #     actions.append(action2)
 
-        self._log_to_txt("\n"+"*"*300+"\n", "StarsAgentTrack2V7")
+        self._log_to_txt("\n"+"*"*300+"\n", "StarsAgentTrack2V9")
         # print(" | ".join(actions))
         return random.choice(actions)
 
 
 if __name__ == "__main__":
 
-    agent = StarsAgentTrack2V7("qwen3:8b")
+    agent = StarsAgentTrack2V9("qwen3:8b")
 
     with open("samples.json", "r", encoding="utf-8") as f:
         samples = json.load(f)
@@ -371,7 +325,7 @@ if __name__ == "__main__":
                 result = agent(sample)
                 print(result)
                 print("*" * 300)
-            #     break
+                break
             # break
     # for i in [3, 4]:
     #     sample = samples["3-player Iterated Prisoner's Dilemma"][i]

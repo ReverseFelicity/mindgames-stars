@@ -1,5 +1,6 @@
 import os
 import re
+import regex
 import sys
 import tempfile
 import time
@@ -33,6 +34,7 @@ def my_logger(log_file="log.txt"):
         def wrapper(*args, **kwargs):
             logger = setup_logger(log_file)
             logger.info("function [%s] start processing" % func.__name__)
+            logger.info(("function start with param [%s] [%s]" % (args, kwargs)))
             start_time = time.time()
             res = func(*args, **kwargs)
             used_time = time.time() - start_time
@@ -58,7 +60,7 @@ def time_monitor():
 
 def timeout(seconds=60):
     def decorator(func):
-        def wrapper(*args, **kwargs):
+        def wrapper1(*args, **kwargs):
             with ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(func, *args, **kwargs)
                 try:
@@ -66,24 +68,49 @@ def timeout(seconds=60):
                     return result
                 except TimeoutError:
                     raise
-        return wrapper
+        return wrapper1
     return decorator
 
+_EMOJI_ONLY = regex.compile(
+    r"[\p{Emoji_Presentation}"
+    r"\U0001F300-\U0001F9FF"   # 大部分彩色符号
+    r"\U0001FA70-\U0001FAFF"   # 扩展 A
+    r"\U00002600-\U000027BF"   # 杂项符号
+    r"]+",
+    regex.V1,
+)
+
+def strip_emoji(text: str) -> str:
+    return _EMOJI_ONLY.sub("", text)
 
 PY_BLOCK_RE = re.compile(f'```python(.*?)```', re.DOTALL)
 
+
+def replace_code(text: str):
+    text = re.sub(r'```python(.*?)```',
+                  'Python code is skipped here to save tokens, but the execution result is in following Observation',
+                  text,
+                  flags=re.DOTALL)
+    return text
 
 def extract_python_blocks(text: str):
     return [m.group(1).strip() for m in PY_BLOCK_RE.finditer(text)]
 
 @time_monitor()
 def run_python_blocks(blocks, timeout_s=20):
-    full_source = '\n\n'.join(blocks)
+    origin_source = '\n\n'.join(blocks)
+    full_source = strip_emoji(origin_source)
+    # print(f"\n======<<<========\n{origin_source}\n=======<<<>>>>=======\n{full_source}\n=======>>>=======\n")
     with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as f:
         f.write(full_source)
         f.flush()
+        env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
         try:
-            completed = subprocess.run([sys.executable, f.name], capture_output=True, text=True, timeout=timeout_s)
+            completed = subprocess.run([sys.executable, f.name],
+                                       capture_output=True, text=True, timeout=timeout_s, env=env)
         except subprocess.TimeoutExpired as e:
             return -1, "", f"Execution Timeout, over {timeout_s} seconds"
+        except BaseException as e2:
+            return -1, "", f"{e2}"
     return completed.returncode, completed.stdout, completed.stderr

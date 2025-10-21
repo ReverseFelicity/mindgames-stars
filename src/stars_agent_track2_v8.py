@@ -11,7 +11,7 @@ from typing import List
 
 
 
-class StarsAgentTrack2V7(StarsAgent):
+class StarsAgentTrack2V8(StarsAgent):
     _temperature: float = 0.1
     _validation_prompt = """
 Your team are competitive game players, You are playing a game based on text, and the text contains all game observation with rules, instructions, current round
@@ -226,7 +226,7 @@ REWRITE_PROMPT
                 base_prompt = f"{prompt_with_q}\n{thinking_answer}"
             else:
                 base_prompt = f"{prompt_with_q}\n{thinking_answer}\n[Observation]{observation_}"
-        self._log_to_txt(base_prompt, "StarsAgentTrack2V7")
+        self._log_to_txt(base_prompt, "StarsAgentTrack2V8")
         return  base_prompt.split("[Answer]")[-1].strip()
 
     def get_action_without_python(self, chat_prompt: str, additional_questions=None, llm_options=None):
@@ -247,7 +247,7 @@ REWRITE_PROMPT
                 base_prompt = f"{prompt_with_q}\n{thinking_answer}"
             else:
                 base_prompt = f"{prompt_with_q}\n{thinking_answer}\n[Observation]{observation_}"
-        self._log_to_txt(base_prompt, "StarsAgentTrack2V7")
+        self._log_to_txt(base_prompt, "StarsAgentTrack2V8")
         return  base_prompt.split("[Answer]")[-1].strip()
 
     def valid_action(self, chat_prompt: str, action: str, llm_options=None):
@@ -276,7 +276,7 @@ REWRITE_PROMPT
                 base_prompt = f"{prompt_with_q}\n{thinking_answer}"
             else:
                 base_prompt = f"{prompt_with_q}\n{thinking_answer}\n[Observation]{observation_}"
-        self._log_to_txt(f"\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n{base_prompt}", "StarsAgentTrack2V7")
+        self._log_to_txt(f"\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n{base_prompt}", "StarsAgentTrack2V8")
         return  base_prompt.split("[Answer]")[-1].strip()
 
     def get_validation_obj(self, observation: str, action: str, validation: str):
@@ -314,7 +314,7 @@ REWRITE_PROMPT
                 if action not in fail_action_map:
                     fail_action_map[action] = 0
                 fail_action_map[action] += 1
-                if fail_count > 3:
+                if fail_count > 6:
                     action = max(fail_action_map, key=fail_action_map.get)
                     meet_requirements = True
                 else:
@@ -352,19 +352,19 @@ REWRITE_PROMPT
         #     action2, time2 = self._get_one_action(observation, 0.2)
         #     actions.append(action2)
 
-        self._log_to_txt("\n"+"*"*300+"\n", "StarsAgentTrack2V7")
+        self._log_to_txt("\n"+"*"*300+"\n", "StarsAgentTrack2V8")
         # print(" | ".join(actions))
         return random.choice(actions)
 
 
 if __name__ == "__main__":
 
-    agent = StarsAgentTrack2V7("qwen3:8b")
+    agent = StarsAgentTrack2V8("qwen3:8b")
 
     with open("samples.json", "r", encoding="utf-8") as f:
         samples = json.load(f)
     for game_name in samples:
-        # if game_name == "3-player Iterated Prisoner's Dilemma":
+        if game_name == "3-player Iterated Prisoner's Dilemma":
         # if game_name == "Codenames":
         # if game_name == "ColonelBlotto":
             for sample in samples[game_name]:

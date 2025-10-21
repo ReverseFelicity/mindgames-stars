@@ -1,95 +1,30 @@
-import json
-import time
-import numpy as np
-from pydantic import BaseModel
-from typing import List, Dict, Literal
-from crewai import Agent, LLM, Crew, Task, Process
-from langchain_ollama import OllamaLLM
-import statistics
-from stars_agent import StarsAgent
-from utils import timeout, time_monitor
+
+from nltk.corpus import wordnet as wn
+from utils import replace_code
 
 
-from typing import Callable, List, Tuple
+# pip install regex
+import regex
 
-Triple = Tuple[int, int, int]
+_EMOJI_ONLY = regex.compile(
+    r"[\p{Emoji_Presentation}"
+    r"\U0001F300-\U0001F9FF"   # 大部分彩色符号
+    r"\U0001FA70-\U0001FAFF"   # 扩展 A
+    r"\U00002600-\U000027BF"   # 杂项符号
+    r"]+",
+    regex.V1,
+)
 
-
-
-def blotto_cmp(a, b):
-    aw = sum(1 for x, y in zip(a, b) if x > y)
-    bw = sum(1 for x, y in zip(a, b) if y > x)
-
-    if aw > bw:
-        return 1
-    elif aw == bw:
-        return 0
-    else:
-        return -1
+def strip_emoji(text: str) -> str:
+    return _EMOJI_ONLY.sub("", text)
 
 
-def compare_all(a_list, b_list):
-    all_result = []
-    for a in a_list:
-        total = 0
-        no_loss = 0
-        for b in b_list:
-            if blotto_cmp(a, b) >= 0:
-                no_loss += 1
-            total += 1
-        all_result.append([a, no_loss*1.0/total])
-    return sorted(all_result, key=lambda x: x[1], reverse=True), np.average([i[1] for i in all_result])
 
-
-def make_sum20_generator(rule: Callable[[int, int, int], bool]) -> List[Triple]:
-    return [(i, j, k)
-            for i in range(21)
-            for j in range(21 - i)
-            for k in [20 - i - j]
-            if rule(i, j, k)]
-
-def two_ten(i: int, j: int, k: int) -> bool:
-    return (i==0 and j==k) or (j==0 and i==k) or (k==0 and i==j)
-
-def two_five(i: int, j: int, k: int) -> bool:
-    return (i==0 and j==k) or (j==0 and i==k) or (k==0 and i==j)
-
-def at_least_one_gt13(i: int, j: int, k: int) -> bool:
-    return i > 13 or j > 13 or k > 13
-
-def at_least_one_gt11(i: int, j: int, k: int) -> bool:
-    return i > 11 or j > 11 or k > 11
-
-def at_least_one_lt2(i: int, j: int, k: int) -> bool:
-    return i < 2 or j < 2 or k < 2
-
-def at_least_one_lt2_and_even(i: int, j: int, k: int) -> bool:
-    return ((i < 2 and statistics.stdev([j, k]) < 2. )
-            or (j < 2 and statistics.stdev([i, k]) < 2.0)
-            or (k < 2 and statistics.stdev([i, j]) < 2.0) )
-
-def at_least_one_lt3_and_even(i: int, j: int, k: int) -> bool:
-    return ((i < 3 and statistics.stdev([j, k]) < 2. )
-            or (j < 3 and statistics.stdev([i, k]) < 2.0)
-            or (k < 3 and statistics.stdev([i, j]) < 2.0) )
-
-def at_least_one_lt4_and_even(i: int, j: int, k: int) -> bool:
-    return ((i < 4 and statistics.stdev([j, k]) < 2. )
-            or (j < 4 and statistics.stdev([i, k]) < 2.0)
-            or (k < 4 and statistics.stdev([i, j]) < 2.0) )
-
-def average(i: int, j: int, k: int) -> bool:
-    return statistics.stdev([i, j, k]) < 2.0
-
-def no_condition(i: int, j: int, k: int) -> bool:
-    return True
-
+a = """
+************ Origin Code Start ************
+['# Proposed action: [tool 4]\n# This is a placeholder for the actual clue and number. Let\'s assume the clue is "touch" and the number is 3.\n\n# List of Codenames Words\ncodenames_words = {\n    "glove": "N", \n    "knife": "R", \n    "name": "N", \n    "silk": "B", \n    "branch": "N", \n    "copy": "R", \n    "office": "B", \n    "hate": "A", \n    "weather": "N", \n    "limit": "N", \n    "day": "B", \n    "flight": "R", \n    "touch": "R", \n    "sneeze": "N", \n    "profit": "B", \n    "end": "B", \n    "request": "B", \n    "crack": "R", \n    "range": "N", \n    "leaf": "R", \n    "boy": "R", \n    "owner": "R", \n    "horse": "B", \n    "cat": "R", \n    "off": "B"\n}\n\n# Proposed clue and number\nproposed_clue = "touch"\nproposed_number = 3\n\n# Check if the clue is in the Codenames Words list\nif proposed_clue in codenames_words:\n    print(f"Error: The clue \'{proposed_clue}\' is present in the Codenames Words list. This is not allowed.")\nelse:\n    print(f"Valid clue: \'{proposed_clue}\' is not present in the Codenames Words list.")\n\n# Print the proposed action\nprint(f"Proposed action: [{proposed_clue} {proposed_number}]")']
+************ Origin Code End ************
+"""
 
 if __name__ == "__main__":
-
-    func_list = [at_least_one_lt2, at_least_one_lt2_and_even, at_least_one_lt3_and_even, average, no_condition, at_least_one_gt13, at_least_one_gt11, two_ten, two_five]
-    for i in func_list:
-        for j in func_list:
-            result_list1, avg = compare_all(make_sum20_generator(i), make_sum20_generator(j))
-            if avg > 0.5:
-                print(avg, i.__name__, j.__name__)
+    print(a)

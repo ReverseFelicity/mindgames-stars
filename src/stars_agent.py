@@ -39,7 +39,7 @@ class StarsAgent(Agent):
         )
         observation_ = observation_.replace(
             "1 free-chat turns",
-            "1 free-chat turns (chat will be shared with other players, do not express your inner thought)"
+            "1 free-chat turns (Format: 'Let us cooperate'. Notice chat will be shared with other players, do not express your inner thought)"
         )
         observation_ = observation_.replace(
             "(the clue may not contain any of the words on the board).",
@@ -48,7 +48,7 @@ class StarsAgent(Agent):
         observation_ = observation_.replace(
             "The Operative guesses up to N+1 words (e.g., '[breeze]') based on the clue. They can also '[pass]'.",
             "The Operative guesses up to N+1 words (e.g., '[breeze]') based on the clue. "
-            "But Operative should guess 1 word at one time, and there will be N+1 rounds for Operative to guess. They can also '[pass]' to finish guessing."
+            "But Operative should guess 1 word at one time, and there will be N+1 rounds for Operative to guess. They can also '[pass]' to finish guessing. But do not add 'guess'!! Here is sample: [cat]"
         )
         return observation_
 
@@ -83,7 +83,7 @@ class StarsAgent(Agent):
         _, content = self.generate(prompt, system, options, output_format, print_log=print_log)
         return content
 
-    @timeout(seconds=30)
+
     @my_logger("generate.txt")
     def generate(self, prompt: str, system: str=None, options: dict=None, output_format=None, print_log: bool = False):
         if not options: options = self.model_option

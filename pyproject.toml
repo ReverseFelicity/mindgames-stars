@@ -23,6 +23,7 @@ dependencies = [
     "langchain-ollama>=0.3.6",
     "scikit-learn>=1.7.1",
     "nltk>=3.9.1",
+    "crewai-tools>=0.75.0",
 ]
 
 [tool.uv.sources]
