@@ -320,7 +320,7 @@ if __name__ == "__main__":
     for game_name in samples:
         # if game_name == "3-player Iterated Prisoner's Dilemma":
         # if game_name == "Codenames":
-        # if game_name == "ColonelBlotto":
+        if game_name == "ColonelBlotto":
             for sample in samples[game_name]:
                 result = agent(sample)
                 print(result)

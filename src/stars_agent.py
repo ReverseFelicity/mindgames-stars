@@ -108,8 +108,8 @@ class StarsAgent(Agent):
 
 if __name__ == "__main__":
 
-    agent = StarsAgent("cogito:8b")
-    thinking, content = agent.generate(prompt="how to cook eggs", system="Enable deep thinking subroutine.")
+    agent = StarsAgent("qwen3:8b")
+    thinking, content = agent.generate(prompt="how to cook eggs", system="")
     print(thinking)
     print("=======")
     print(content)
