@@ -103,7 +103,7 @@ REWRITE_PROMPT
             prompt=prompt, system="/nothink",
             options={
                 "temperature": self._temperature or 0.1,
-                "num_predict": 8192,
+                "num_predict": 4096,
                 "stop": ["[Question]", "Please enter the action"],
                 "repeat_penalty": 2
             } if len(options)==0 else options,
@@ -123,7 +123,7 @@ REWRITE_PROMPT
             prompt=prompt, system="/nothink",
             options={
                 "temperature": self._temperature or 0.1,
-                "num_predict": 8192,
+                "num_predict": 4096,
                 "stop": ["[Question]", "Please enter the action"],
                 "repeat_penalty": 2
             } if len(options)==0 else options
@@ -371,5 +371,4 @@ if __name__ == "__main__":
                 result = agent(sample)
                 print(result)
                 print("*" * 300)
-                break
             break
