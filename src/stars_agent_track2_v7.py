@@ -105,7 +105,7 @@ REWRITE_PROMPT
                 "temperature": self._temperature or 0.1,
                 "num_predict": 4096,
                 "stop": ["[Question]", "Please enter the action"],
-                "repeat_penalty": 2
+                "repeat_penalty": 1.2
             } if len(options)==0 else options,
             format_name=q.format_name
         )
@@ -125,7 +125,7 @@ REWRITE_PROMPT
                 "temperature": self._temperature or 0.1,
                 "num_predict": 4096,
                 "stop": ["[Question]", "Please enter the action"],
-                "repeat_penalty": 2
+                "repeat_penalty": 1.2
             } if len(options)==0 else options
         )
         if not "[Thinking]" in content or not "[Answer]" in content:
@@ -287,7 +287,7 @@ REWRITE_PROMPT
         content = self.generate_rtn_content_only(
             prompt=validation_prompt, system="/nothink",
             options={
-                "temperature": self._temperature or 0.1, "stop": ["[Question]"], "repeat_penalty": 2
+                "temperature": self._temperature or 0.1, "stop": ["[Question]"], "repeat_penalty": 1.2
             },
             output_format=ReActWithValidation.model_json_schema()
         )
@@ -344,7 +344,7 @@ REWRITE_PROMPT
     @time_monitor()
     def __call__(self, observation: str) -> str:
         observation = self._observation_wrapper(observation)
-        # print(f"\033[31m{observation}\033[0m")
+        print(f"\033[31m{observation}\033[0m")
         actions = []
         action1, time1 = self._get_one_action(observation, 0.1)
         actions.append(action1)
