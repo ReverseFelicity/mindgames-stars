@@ -20,6 +20,7 @@ pip install uv
 ```
 git clone git@github.com:ReverseFelicity/mindgames-stars.git
 cd mindgames-star
+git checkout master
 uv sync
 ```
 5. test agent
