@@ -3,8 +3,10 @@
 1. install Ollama, [reference link](https://ollama.com/download)
 ```
 please install 0.11.11 version from Ollama github releases.
-
 For latest version, I detect slow inference inssue.
+
+curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=0.11.11 sh
+ollama -v
 ```
 2. pull qwen3:8b
 ```
